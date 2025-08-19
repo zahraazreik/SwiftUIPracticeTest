@@ -14,20 +14,6 @@ struct Book: Identifiable, Hashable {
     var isRead: Bool = false
 }
 
-class BookViewModel: ObservableObject {
-    @Published var books: [Book] = []
-    
-    func addBook(title: String, author: String) {
-        books.append(Book(title: title, author: author))
-    }
-    
-    func toggleRead(_ book: Book) {
-        if let i = books.firstIndex(of: book) {
-            books[i].isRead.toggle()
-        }
-    }
-}
-
 struct ContentView: View {
     @StateObject var viewModel = BookViewModel()
     @State private var showingAdd = false
@@ -54,9 +40,16 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("Books")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                Button("+") { showingAdd = true }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showingAdd = true }) {
+                        Image(systemName: "plus").imageScale(.large)
+                    }
+                }
             }
+
+            
             .sheet(isPresented: $showingAdd) {
                 AddBookView(viewModel: viewModel)
             }
@@ -64,53 +57,6 @@ struct ContentView: View {
                 BookDetailView(book: book, viewModel: viewModel)
             }
         }
-    }
-}
-
-struct AddBookView: View {
-    @ObservedObject var viewModel: BookViewModel
-    @Environment(\.dismiss) var dismiss
-    
-    @State private var title = ""
-    @State private var author = ""
-    
-    var body: some View {
-        VStack(spacing: 16) {
-            TextField("Title", text: $title)
-                .textFieldStyle(.roundedBorder)
-            TextField("Author", text: $author)
-                .textFieldStyle(.roundedBorder)
-            
-            Button("Save") {
-                guard !title.isEmpty, !author.isEmpty else { return }
-                viewModel.addBook(title: title, author: author)
-                dismiss()
-            }
-            .buttonStyle(.borderedProminent)
-            
-            Button("Cancel") { dismiss() }
-        }
-        .padding()
-    }
-}
-
-struct BookDetailView: View {
-    var book: Book
-    @ObservedObject var viewModel: BookViewModel
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            Text(book.title).font(.title)
-            Text(book.author).foregroundColor(.secondary)
-            
-            Button(book.isRead ? "Mark as Unread" : "Mark as Read") {
-                viewModel.toggleRead(book)
-            }
-            .buttonStyle(.bordered)
-            
-            Spacer()
-        }
-        .padding()
     }
 }
 
